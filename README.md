@@ -1,4 +1,4 @@
-# Nginx-fandai-TLS
+# Nginx-反代-TLS-证书申请
 
 Nginx反代/TLS配置教程总结脚本来源于https://cxjiang.top/2019/08/02/v2ray-basic/
 
