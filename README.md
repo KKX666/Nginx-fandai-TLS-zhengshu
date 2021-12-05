@@ -128,10 +128,13 @@ centos的默认包里没有nginx所以安一个软件源（有的忽略）
 
 ![image](https://user-images.githubusercontent.com/94978556/144739848-f5db4d54-426e-412b-9df6-3d2f16ab8618.png)
 
-第18步：
+![image](https://user-images.githubusercontent.com/94978556/144756547-0dc2fbcb-975a-429c-b77d-fb217311553b.png)
+
+
+第18步更换运行环境：
 `chcon system_u:object_r:httpd_config_t:s0 /root/.acme.sh/换成你的域名_ecc/fullchain.cer`
 
-第19步：
+第19步更换运行环境：
 `chcon system_u:object_r:httpd_config_t:s0 /root/.acme.sh/换成你的域名_ecc/换成你的域名.key`
 
 在次重启nginx：
