@@ -93,7 +93,43 @@ centos的默认包里没有nginx所以安一个软件源（有的忽略）
 
 可访问：https://cxjiang.top/2019/08/02/v2ray-basic/  复制以下全部代码全部粘贴进去
 
-![image](https://user-images.githubusercontent.com/94978556/144738957-a45cde00-d454-4ea8-bd96-dac02e5d7f6c.png)
+```
+#   * Official English Documentation: http://nginx.org/en/docs/
+#   * Official Russian Documentation: http://nginx.org/ru/docs/
+
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log  /var/log/nginx/access.log  main;
+    sendfile            on;
+#   tcp_nopush          on;
+#   tcp_nodelay         on;
+    keepalive_timeout   65;
+#   types_hash_max_size 2048;
+
+   	include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;
+}
+```
+
+![image](https://user-images.githubusercontent.com/94978556/146638192-eaf9fab4-b4d6-48ca-9f01-16d6008b31a3.png)
 
 --------------------------------------------------------------------------
 进入nginx的站点配置文件夹，并新建我们对应域名的配置文件
@@ -105,6 +141,58 @@ centos的默认包里没有nginx所以安一个软件源（有的忽略）
 `vim 换成你的域名.conf`进入编辑配置文件
 
 第17步访问https://cxjiang.top/2019/08/02/v2ray-basic/   粘贴以下内容复制进去
+
+```
+server
+{
+    listen 80;
+    server_name 你的域名;
+
+    #将http重定向到https
+    return 301 https://你的域名$request_uri;
+}
+
+server
+{
+    listen 443 ssl http2;
+    server_name 你的域名;
+    ssl on;
+    ssl_certificate /root/.acme.sh/你的域名_ecc/fullchain.cer; 
+    ssl_certificate_key /root/.acme.sh/你的域名_ecc/你的域名.key;
+    ssl_session_timeout 5m;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers "EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5";
+    ssl_session_cache builtin:1000 shared:SSL:10m;
+    ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+    access_log off;
+    
+    location / {
+        
+        #向后端传递访客IP
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        #设定需要反代的域名，可以加端口号
+        proxy_pass https://www.iqiyi.com/;
+        #替换网站内容
+        sub_filter 'www.iqiyi.com' '你的域名';
+
+        # websocket设定，V2ray使用，这里的设置要和v2ray的设置一致。
+        location /自定义/ {
+            proxy_redirect off;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $http_host;
+            proxy_intercept_errors on;
+            if ($http_upgrade = "websocket" ){
+                    proxy_pass http://127.0.0.1:自定义v2ray端口;
+            }
+        }
+    }
+}
+```
 
 ![image](https://user-images.githubusercontent.com/94978556/144739173-82862e9f-00e9-4c02-a97b-2850a1939f69.png)
 
